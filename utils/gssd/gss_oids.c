@@ -41,3 +41,9 @@ gss_OID_desc krb5oid =
 
 gss_OID_desc spkm3oid =
    {7, "\053\006\001\005\005\001\003"};
+
+gss_OID_desc GSS_KRB5_EXPORT_LUCID_SEC_CONTEXT_V1 =
+   {12, "\x2a\x86\x48\x86\xf7\x12\x01\x02\x02\x05\x06\x01"};
+
+gss_OID_desc GSS_KRB5_FREE_LUCID_SEC_CONTEXT_OID =
+   {11, "\x2a\x86\x48\x86\xf7\x12\x01\x02\x02\x05\x07"};

@@ -35,6 +35,8 @@
 
 extern gss_OID_desc krb5oid;
 extern gss_OID_desc spkm3oid;
+extern gss_OID_desc GSS_KRB5_EXPORT_LUCID_SEC_CONTEXT_V1;
+extern gss_OID_desc GSS_KRB5_FREE_LUCID_SEC_CONTEXT_OID;
 
 #ifndef g_OID_equal
 #define g_OID_equal(o1,o2) \

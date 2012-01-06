@@ -86,10 +86,11 @@ AC_DEFUN([AC_KERBEROS_V5],[
   fi
 
   dnl Now check for functions within gssapi library
-  AC_CHECK_LIB($gssapi_lib, gss_krb5_export_lucid_sec_context,
-    AC_DEFINE(HAVE_LUCID_CONTEXT_SUPPORT, 1, [Define this if the Kerberos GSS library supports gss_krb5_export_lucid_sec_context]), ,$KRBLIBS)
   AC_CHECK_LIB($gssapi_lib, gss_krb5_ccache_name,
     AC_DEFINE(HAVE_GSS_KRB5_CCACHE_NAME, 1, [Define this if the Kerberos GSS library supports gss_krb5_ccache_name]), ,$KRBLIBS)
+  AC_CHECK_LIB($gssapi_lib, gss_inquire_sec_context_by_oid,
+    AC_DEFINE(HAVE_INQUIRE_SEC_CONTEXT_BY_OID, 1, [Define this if the GSS library supports gss_inquire_sec_context_by_oid]), ,$KRBLIBS)
+
 
   dnl Check for newer error message facility
   AC_CHECK_LIB($gssapi_lib, krb5_get_error_message,

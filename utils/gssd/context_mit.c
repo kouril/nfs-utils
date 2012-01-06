@@ -32,7 +32,7 @@
 #include <config.h>
 #endif	/* HAVE_CONFIG_H */
 
-#ifndef HAVE_LUCID_CONTEXT_SUPPORT
+#if !defined(HAVE_LUCID_CONTEXT_SUPPORT) && !defined(HAVE_INQUIRE_SEC_CONTEXT_BY_OID)
 #ifdef HAVE_KRB5
 
 #include <stdio.h>
@@ -277,4 +277,4 @@ out_err:
 }
 
 #endif /* HAVE_KRB5 */
-#endif /* HAVE_LUCID_CONTEXT_SUPPORT */
+#endif	/* !HAVE_LUCID_CONTEXT_SUPPORT && !HAVE_INQUIRE_SEC_CONTEXT_BY_OID */

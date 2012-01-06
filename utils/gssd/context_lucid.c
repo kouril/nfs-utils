@@ -32,7 +32,7 @@
 #include <config.h>
 #endif	/* HAVE_CONFIG_H */
 
-#ifdef HAVE_LUCID_CONTEXT_SUPPORT
+#if defined(HAVE_LUCID_CONTEXT_SUPPORT) || defined(HAVE_INQUIRE_SEC_CONTEXT_BY_OID)
 
 /*
  * Newer versions of MIT and Heimdal have lucid context support.
@@ -54,6 +54,17 @@
 #ifndef OM_uint64
 typedef uint64_t OM_uint64;
 #endif
+
+static OM_uint32
+export_lucid_sec_context(OM_uint32 *minor_status,
+			 gss_ctx_id_t *context_handle,
+			 OM_uint32 version,
+			 void **kctx);
+
+static OM_uint32
+free_lucid_sec_context(OM_uint32 *minor_status,
+		       gss_ctx_id_t context_handle,
+		       void *kctx);
 
 static int
 write_lucid_keyblock(char **p, char *end, gss_krb5_lucid_key_t *key)
@@ -266,8 +277,8 @@ serialize_krb5_ctx(gss_ctx_id_t ctx, gss_buffer_desc *buf, int32_t *endtime)
 	int retcode = 0;
 
 	printerr(2, "DEBUG: %s: lucid version!\n", __FUNCTION__);
-	maj_stat = gss_export_lucid_sec_context(&min_stat, &ctx,
-						1, &return_ctx);
+	maj_stat = export_lucid_sec_context(&min_stat, &ctx,
+					    1, &return_ctx);
 	if (maj_stat != GSS_S_COMPLETE) {
 		pgsserr("gss_export_lucid_sec_context",
 			maj_stat, min_stat, &krb5oid);
@@ -302,7 +313,7 @@ serialize_krb5_ctx(gss_ctx_id_t ctx, gss_buffer_desc *buf, int32_t *endtime)
 	else
 		retcode = prepare_krb5_rfc4121_buffer(lctx, buf, endtime);
 
-	maj_stat = gss_free_lucid_sec_context(&min_stat, ctx, return_ctx);
+	maj_stat = free_lucid_sec_context(&min_stat, ctx, return_ctx);
 	if (maj_stat != GSS_S_COMPLETE) {
 		pgsserr("gss_free_lucid_sec_context",
 			maj_stat, min_stat, &krb5oid);
@@ -322,6 +333,73 @@ out_err:
 	return -1;
 }
 
+static OM_uint32
+export_lucid_sec_context(OM_uint32 *minor_status,
+                         gss_ctx_id_t *context_handle,
+                         OM_uint32 version,
+                         void **kctx)
+{
+        OM_uint32 maj_stat, min_stat;
+        gss_buffer_set_t data_set = GSS_C_NO_BUFFER_SET;
+	gss_OID_desc oid = GSS_KRB5_EXPORT_LUCID_SEC_CONTEXT_V1;
 
+#ifdef HAVE_LUCID_CONTEXT_SUPPORT
+	return gss_export_lucid_sec_context(minor_status, context_handle,
+                                            version, kctx);
+#endif
+        if (version != 1) {
+		*minor_status = EINVAL;
+		return GSS_S_FAILURE;
+	}
 
-#endif /* HAVE_LUCID_CONTEXT_SUPPORT */
+        maj_stat = gss_inquire_sec_context_by_oid(minor_status,
+                                                  *context_handle,
+						  &oid,
+                                                  &data_set);
+        if (GSS_ERROR(maj_stat))
+                return maj_stat;
+
+        if (data_set == GSS_C_NO_BUFFER_SET ||
+            data_set->count != 1 ||
+            data_set->elements[0].length != sizeof(void *)) {
+                *minor_status = EINVAL;
+                return GSS_S_FAILURE;
+        }
+
+        *kctx = *((void **)data_set->elements[0].value);
+
+        /* Clean up the context state (it is an error for
+         * someone to attempt to use this context again)
+         */
+        (void)gss_delete_sec_context(minor_status, context_handle, NULL);
+        *context_handle = GSS_C_NO_CONTEXT;
+
+        gss_release_buffer_set(&min_stat, &data_set);
+
+        return GSS_S_COMPLETE;
+}
+
+static OM_uint32
+free_lucid_sec_context(OM_uint32 *minor_status,
+                       gss_ctx_id_t context_handle,
+                       void *kctx)
+{
+	gss_OID_desc oid = GSS_KRB5_FREE_LUCID_SEC_CONTEXT_OID;
+	OM_uint32 major_status;
+	gss_buffer_desc req_buffer;
+
+#ifdef HAVE_LUCID_CONTEXT_SUPPORT
+	return gss_free_lucid_sec_context(minor_status, context_handle, kctx);
+#endif
+
+	req_buffer.length = sizeof(kctx);
+	req_buffer.value = kctx;
+
+	/* XXX we shouldn't hard wire krb5 */
+	major_status = gssspi_mech_invoke(minor_status,
+					  (gss_OID)gss_mech_krb5,
+					  &oid,
+					  &req_buffer);
+	return major_status;
+}
+#endif /* HAVE_LUCID_CONTEXT_SUPPORT || HAVE_INQUIRE_SEC_CONTEXT_BY_OID */
