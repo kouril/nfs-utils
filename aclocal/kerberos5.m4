@@ -88,8 +88,6 @@ AC_DEFUN([AC_KERBEROS_V5],[
   dnl Now check for functions within gssapi library
   AC_CHECK_LIB($gssapi_lib, gss_krb5_export_lucid_sec_context,
     AC_DEFINE(HAVE_LUCID_CONTEXT_SUPPORT, 1, [Define this if the Kerberos GSS library supports gss_krb5_export_lucid_sec_context]), ,$KRBLIBS)
-  AC_CHECK_LIB($gssapi_lib, gss_krb5_set_allowable_enctypes,
-    AC_DEFINE(HAVE_SET_ALLOWABLE_ENCTYPES, 1, [Define this if the Kerberos GSS library supports gss_krb5_set_allowable_enctypes]), ,$KRBLIBS)
   AC_CHECK_LIB($gssapi_lib, gss_krb5_ccache_name,
     AC_DEFINE(HAVE_GSS_KRB5_CCACHE_NAME, 1, [Define this if the Kerberos GSS library supports gss_krb5_ccache_name]), ,$KRBLIBS)
 
