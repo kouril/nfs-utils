@@ -81,6 +81,9 @@
 #include <gssapi/gssapi_generic.h>
 #define GSS_C_NT_HOSTBASED_SERVICE gss_nt_service_name
 #endif
+#ifdef HAVE_KRB5
+#include <gssapi/gssapi_krb5.h>
+#endif
 #include "gss_util.h"
 #include "err_util.h"
 #include "gssd.h"
@@ -91,6 +94,7 @@
 #ifdef HAVE_COM_ERR_H
 #include <com_err.h>
 #endif
+#include "gss_oids.h"
 
 /* Global gssd_credentials handle */
 gss_cred_id_t gssd_creds;
@@ -339,3 +343,17 @@ out:
 	return retval;
 }
 
+OM_uint32
+set_allowable_enctypes(OM_uint32 *minor_status, gss_cred_id_t cred,
+	gss_OID mech_type, OM_uint32 num_ktypes, void *ktypes)
+{
+#ifdef HAVE_SET_ALLOWABLE_ENCTYPES
+	return gss_set_allowable_enctypes(minor_status, cred, mech_type, num_ktypes, ktypes);
+#endif
+	if (!g_OID_equal(mech_type, &krb5oid)) {
+		*minor_status = EINVAL;
+		return GSS_S_BAD_MECH;
+	}
+
+	return gss_krb5_set_allowable_enctypes(minor_status, cred, num_ktypes, ktypes);
+}

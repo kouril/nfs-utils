@@ -138,9 +138,6 @@ static int gssd_get_single_krb5_cred(krb5_context context,
 		krb5_keytab kt, struct gssd_k5_kt_princ *ple, int nocache);
 static int query_krb5_ccache(const char* cred_cache, char **ret_princname,
 		char **ret_realm);
-static OM_uint32 set_allowable_enctypes(OM_uint32 *minor_status,
-		gss_cred_id_t cred, gss_OID mech_type, OM_uint32 num_ktypes,
-		krb5_enctype *ktypes);
 
 /*
  * Called from the scandir function to weed out potential krb5
@@ -1359,21 +1356,3 @@ limit_krb5_enctypes(struct rpc_gss_sec *sec)
 
 	return 0;
 }
-
-static OM_uint32 set_allowable_enctypes(OM_uint32 *minor_status,
-		gss_cred_id_t cred, gss_OID mech_type, OM_uint32 num_ktypes,
-		krb5_enctype *ktypes)
-{
-#ifdef HAVE_SET_ALLOWABLE_ENCTYPES
-	return gss_set_allowable_enctypes(minor_status, cred, mech_type, num_ktypes, ktypes);
-#endif	/* HAVE_SET_ALLOWABLE_ENCTYPES */
-
-	if (!g_OID_equal(mech_type, &krb5oid)) {
-		*minor_status = EINVAL;
-		return GSS_S_BAD_MECH;
-	}
-
-	return gss_krb5_set_allowable_enctypes(minor_status, cred, num_ktypes, ktypes);
-}
-
-

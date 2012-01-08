@@ -42,4 +42,8 @@ void pgsserr(char *msg, u_int32_t maj_stat, u_int32_t min_stat,
 	const gss_OID mech);
 int gssd_check_mechs(void);
 
+OM_uint32
+set_allowable_enctypes(OM_uint32 *minor_status, gss_cred_id_t cred,
+	gss_OID mech_type, OM_uint32 num_ktypes, void *ktypes);
+
 #endif /* _GSS_UTIL_H_ */

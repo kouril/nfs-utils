@@ -168,7 +168,6 @@ out_clean_parsed:
 int
 svcgssd_limit_krb5_enctypes(void)
 {
-#ifdef HAVE_SET_ALLOWABLE_ENCTYPES
 	u_int maj_stat, min_stat;
 	krb5_enctype old_kernel_enctypes[] = {
 		ENCTYPE_DES_CBC_CRC,
@@ -210,7 +209,7 @@ svcgssd_limit_krb5_enctypes(void)
 			"enctypes from defaults\n", __func__, num_enctypes);
 	}
 
-	maj_stat = gss_set_allowable_enctypes(&min_stat, gssd_creds,
+	maj_stat = set_allowable_enctypes(&min_stat, gssd_creds,
 			&krb5oid, num_enctypes, enctypes);
 	if (maj_stat != GSS_S_COMPLETE) {
 		printerr(1, "WARNING: gss_set_allowable_enctypes failed\n");
@@ -218,6 +217,5 @@ svcgssd_limit_krb5_enctypes(void)
 			maj_stat, min_stat, &krb5oid);
 		return -1;
 	}
-#endif
 	return 0;
 }
