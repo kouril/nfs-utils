@@ -836,7 +836,11 @@ int create_auth_rpc_client(struct clnt_info *clp,
 	sec.cred = GSS_C_NO_CREDENTIAL;
 	sec.req_flags = 0;
 	if (authtype == AUTHTYPE_KRB5) {
+#if 0
 		sec.mech = (gss_OID)&krb5oid;
+#else
+		sec.mech = (gss_OID)&eapoid;
+#endif
 		sec.req_flags = GSS_C_MUTUAL_FLAG;
 	}
 	else if (authtype == AUTHTYPE_SPKM3) {

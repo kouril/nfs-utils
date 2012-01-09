@@ -49,7 +49,7 @@ serialize_context_for_kernel(gss_ctx_id_t ctx,
 			     gss_OID mech,
 			     int32_t *endtime)
 {
-	if (g_OID_equal(&krb5oid, mech))
+	if (g_OID_equal(&krb5oid, mech) || g_OID_equal(&eapoid, mech))
 		return serialize_krb5_ctx(ctx, buf, endtime);
 #ifdef HAVE_SPKM3_H
 	else if (g_OID_equal(&spkm3oid, mech))
