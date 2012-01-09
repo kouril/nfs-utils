@@ -48,13 +48,14 @@
 
 struct mech2file {
 	gss_OID_desc mech;
-	char         filename[8];
+	char         *filename;
 };
 
 struct mech2file m2f[] = {
 	{{9, "\052\206\110\206\367\022\001\002\002"}, "krb5"},
 	{{7, "\053\006\001\005\005\001\003"}, "spkm3"},
 	{{7, "\053\006\001\005\005\001\009"}, "lipkey"},
+	{{9, "\x2B\x06\x01\x04\x01\xA9\x4A\x16\x01"}, "eap"},
 	{{0,0},""},
 };
 
