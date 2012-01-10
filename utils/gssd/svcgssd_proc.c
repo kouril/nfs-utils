@@ -499,6 +499,8 @@ handle_nullreq(FILE *f) {
 		maj_stat = GSS_S_FAILURE;
 		goto out_err;
 	}
+	printerr(1, "gss_accept_sec_context succeeded\n");
+
 	/* We no longer need the gss context */
 	gss_delete_sec_context(&ignore_min_stat, &ctx, &ignore_out_tok);
 
