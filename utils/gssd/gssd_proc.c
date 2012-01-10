@@ -839,7 +839,7 @@ int create_auth_rpc_client(struct clnt_info *clp,
 #if 0
 		sec.mech = (gss_OID)&krb5oid;
 #else
-		sec.mech = (gss_OID)&eapoid;
+		sec.mech = (gss_OID)&eap_aes128_oid;
 #endif
 		sec.req_flags = GSS_C_MUTUAL_FLAG;
 	}

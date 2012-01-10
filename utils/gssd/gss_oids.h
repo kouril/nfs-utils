@@ -35,7 +35,7 @@
 
 extern gss_OID_desc krb5oid;
 extern gss_OID_desc spkm3oid;
-extern gss_OID_desc eapoid;
+extern gss_OID_desc eap_aes128_oid;
 extern gss_OID_desc GSS_KRB5_EXPORT_LUCID_SEC_CONTEXT_V1;
 extern gss_OID_desc GSS_KRB5_FREE_LUCID_SEC_CONTEXT_OID;
 

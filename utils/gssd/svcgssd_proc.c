@@ -87,7 +87,7 @@ do_svc_downcall(gss_buffer_desc *out_handle, struct svc_cred *cred,
 	printerr(1, "doing downcall\n");
 	if ((fname = mech2file(mech)) == NULL)
 		goto out_err;
-	if (strncmp(fname, "eap", 3) == 0)
+	if (strncmp(fname, "eap-aes128", 10) == 0)
 		fname = "krb5";
 	f = fopen(SVCGSSD_CONTEXT_CHANNEL, "w");
 	if (f == NULL) {
@@ -248,7 +248,7 @@ get_ids(gss_name_t client_name, gss_OID mech, struct svc_cred *cred)
 		goto out_free;
 	}
 
-	if (strcmp(secname, "eap") == 0)
+	if (strcmp(secname, "eap-aes128") == 0)
 		secname = "krb5";
 
 	res = nfs4_gss_princ_to_ids(secname, sname, &uid, &gid);
@@ -371,7 +371,7 @@ get_hostbased_client_name(gss_name_t client_name, gss_OID mech,
 
 	/* For Kerberos, transform the NT_KRB5_PRINCIPAL name to
 	 * an NT_HOSTBASED_SERVICE name */
-	if (g_OID_equal(&krb5oid, mech) || g_OID_equal(&eapoid, mech)) {
+	if (g_OID_equal(&krb5oid, mech) || g_OID_equal(&eap_aes128_oid, mech)) {
 		if (get_krb5_hostbased_name(&name, &cname) == 0)
 			*hostbased_name = cname;
 	}

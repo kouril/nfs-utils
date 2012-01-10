@@ -42,8 +42,8 @@ gss_OID_desc krb5oid =
 gss_OID_desc spkm3oid =
    {7, "\053\006\001\005\005\001\003"};
 
-gss_OID_desc eapoid =
-   {9, "\x2B\x06\x01\x04\x01\xA9\x4A\x16\x01"};
+gss_OID_desc eap_aes128_oid =
+   {10, "\x2B\x06\x01\x04\x01\xA9\x4A\x16\x01\x11"};
 
 gss_OID_desc GSS_KRB5_EXPORT_LUCID_SEC_CONTEXT_V1 =
    {12, "\x2a\x86\x48\x86\xf7\x12\x01\x02\x02\x05\x06\x01"};
