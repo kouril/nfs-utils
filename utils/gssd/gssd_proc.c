@@ -831,6 +831,22 @@ int create_auth_rpc_client(struct clnt_info *clp,
 	printerr(2, "creating context using fsuid %d (save_uid %d)\n",
 			uid, save_uid);
 
+	{
+	    struct passwd *pw = NULL, pwd;
+	    char pwbuf[BUFSIZ];
+	    char eapccname[1024];
+	    int ret;
+
+	    ret = getpwuid_r(uid, &pwd, pwbuf, sizeof(pwbuf), &pw);
+	    if (ret == 0 && pw && pw->pw_dir) {
+		snprintf(eapccname, sizeof(eapccname),
+			"%s/.gss_eap_id", pw->pw_dir);
+		setenv("GSSEAP_IDENTITY", eapccname, 1);
+		printerr(2, "using environment variable to select eap cache %s\n", eapccname);
+	    }
+	}
+
+
 	sec.qop = GSS_C_QOP_DEFAULT;
 	sec.svc = RPCSEC_GSS_SVC_NONE;
 	sec.cred = GSS_C_NO_CREDENTIAL;
