@@ -1024,6 +1024,7 @@ process_krb5_upcall(struct clnt_info *clp, uid_t uid, int fd, char *tgtname,
 		 service ? service : "<null>");
 	if (uid != 0 || (uid == 0 && root_uses_machine_creds == 0 &&
 				service == NULL)) {
+#if 0 /* let's do eap ... */
 		/* Tell krb5 gss which credentials cache to use */
 		for (dirname = ccachesearch; *dirname != NULL; dirname++) {
 			err = gssd_setup_krb5_user_gss_ccache(uid, clp->servername, *dirname);
@@ -1035,6 +1036,10 @@ process_krb5_upcall(struct clnt_info *clp, uid_t uid, int fd, char *tgtname,
 			if (create_resp == 0)
 				break;
 		}
+#else
+	create_resp = create_auth_rpc_client(clp, &rpc_clnt, &auth, uid,
+					     AUTHTYPE_KRB5);
+#endif
 	}
 	if (create_resp != 0) {
 		if (uid == 0 && (root_uses_machine_creds == 1 ||
