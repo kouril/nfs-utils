@@ -452,9 +452,11 @@ handle_nullreq(FILE *f) {
 		memcpy(&ctx, in_handle.value, in_handle.length);
 	}
 
+#if 0
 	if (svcgssd_limit_krb5_enctypes()) {
 		goto out_err;
 	}
+#endif
 
 	maj_stat = gss_accept_sec_context(&min_stat, &ctx, gssd_creds,
 			&in_tok, GSS_C_NO_CHANNEL_BINDINGS, &client_name,
