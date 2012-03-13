@@ -74,6 +74,10 @@ struct svc_cred {
 };
 static char vbuf[RPC_CHAN_BUF_SIZE];
 
+typedef struct stored_ctx_t {
+	gss_ctx_id_t ctx;
+} stored_ctx_t;
+
 static int
 do_svc_downcall(gss_buffer_desc *out_handle, struct svc_cred *cred,
 		gss_OID mech, gss_buffer_desc *context_token,
@@ -406,7 +410,8 @@ handle_nullreq(FILE *f) {
 	/* XXX isn't there a define for this?: */
 				null_token = {.value = NULL};
 	u_int32_t		ret_flags;
-	gss_ctx_id_t		ctx = GSS_C_NO_CONTEXT;
+	gss_ctx_id_t		*ctx = NULL;
+	struct stored_ctx_t 	*stored_ctx = NULL;
 	gss_name_t		client_name = NULL;
 	gss_OID			mech = GSS_C_NO_OID;
 	u_int32_t		maj_stat = GSS_S_FAILURE, min_stat = 0;
@@ -436,12 +441,15 @@ handle_nullreq(FILE *f) {
 
 	in_tok.length = (size_t) qword_get(&cp, in_tok.value,
 					   sizeof(in_tok_buf));
+
+	printerr(3, "in_tok.length = %d, in_handle.length = %d\n",
+		in_tok.length, in_handle.length);
 #ifdef DEBUG
 	print_hexl("in_tok", in_tok.value, in_tok.length);
 #endif
 
 	if (in_handle.length != 0) { /* CONTINUE_INIT case */
-		if (in_handle.length != sizeof(ctx)) {
+		if (in_handle.length != sizeof(stored_ctx_t *)) {
 			printerr(0, "WARNING: handle_nullreq: "
 				    "input handle has unexpected length %d\n",
 				    in_handle.length);
@@ -449,8 +457,18 @@ handle_nullreq(FILE *f) {
 		}
 		/* in_handle is the context id stored in the out_handle
 		 * for the GSS_S_CONTINUE_NEEDED case below.  */
-		memcpy(&ctx, in_handle.value, in_handle.length);
+		memcpy(&stored_ctx, in_handle.value, in_handle.length);
 	}
+	if (stored_ctx == NULL) {
+		stored_ctx = malloc(sizeof(*stored_ctx));
+		if (stored_ctx == NULL) {
+			printerr(0, "Not enough memory to store GSS context\n");
+			goto out_err;
+		}
+		stored_ctx->ctx = GSS_C_NO_CONTEXT;
+		ctx = &stored_ctx->ctx;
+	}
+	ctx = &stored_ctx->ctx;
 
 #if 0
 	if (svcgssd_limit_krb5_enctypes()) {
@@ -458,16 +476,22 @@ handle_nullreq(FILE *f) {
 	}
 #endif
 
-	maj_stat = gss_accept_sec_context(&min_stat, &ctx, gssd_creds,
+	printerr(0, "DEBUG: ctx == %u, *ctx == %u, stored_ctx = %u\n",
+		ctx, (ctx) ? *ctx : 0, stored_ctx);
+
+	maj_stat = gss_accept_sec_context(&min_stat, ctx, gssd_creds,
 			&in_tok, GSS_C_NO_CHANNEL_BINDINGS, &client_name,
 			&mech, &out_tok, &ret_flags, NULL, NULL);
+
+	printerr(0, "DEBUG: ctx == %u, *ctx == %u, stored_ctx = %u\n",
+		ctx, (ctx) ? *ctx : 0, stored_ctx);
 
 	if (maj_stat == GSS_S_CONTINUE_NEEDED) {
 		printerr(1, "gss_accept_sec_context GSS_S_CONTINUE_NEEDED\n");
 
 		/* Save the context handle for future calls */
-		out_handle.length = sizeof(ctx);
-		memcpy(out_handle.value, &ctx, sizeof(ctx));
+		out_handle.length = sizeof(stored_ctx);
+		memcpy(out_handle.value, &stored_ctx, sizeof(stored_ctx));
 		goto continue_needed;
 	}
 	else if (maj_stat != GSS_S_COMPLETE) {
@@ -495,7 +519,7 @@ handle_nullreq(FILE *f) {
 
 	/* kernel needs ctx to calculate verifier on null response, so
 	 * must give it context before doing null call: */
-	if (serialize_context_for_kernel(&ctx, &ctx_token, mech, &ctx_endtime)) {
+	if (serialize_context_for_kernel(ctx, &ctx_token, mech, &ctx_endtime)) {
 		printerr(0, "WARNING: handle_nullreq: "
 			    "serialize_context_for_kernel failed\n");
 		maj_stat = GSS_S_FAILURE;
@@ -504,8 +528,8 @@ handle_nullreq(FILE *f) {
 	printerr(1, "gss_accept_sec_context succeeded\n");
 
 	/* We no longer need the gss context */
-	if (ctx != GSS_C_NO_CONTEXT)
-		gss_delete_sec_context(&ignore_min_stat, &ctx, &ignore_out_tok);
+	if (ctx && *ctx != GSS_C_NO_CONTEXT)
+		gss_delete_sec_context(&ignore_min_stat, ctx, &ignore_out_tok);
 
 	do_svc_downcall(&out_handle, &cred, mech, &ctx_token, ctx_endtime,
 			hostbased_name);
@@ -524,8 +548,13 @@ out:
 	return;
 
 out_err:
-	if (ctx != GSS_C_NO_CONTEXT)
-		gss_delete_sec_context(&ignore_min_stat, &ctx, &ignore_out_tok);
+
+	if (ctx && *ctx != GSS_C_NO_CONTEXT)
+		gss_delete_sec_context(&ignore_min_stat, ctx, &ignore_out_tok);
+#if 0
+	if (stored_ctx)
+		free(stored_ctx);
+#endif
 	send_response(&in_handle, &in_tok, maj_stat, min_stat,
 			&null_token, &null_token);
 	goto out;
