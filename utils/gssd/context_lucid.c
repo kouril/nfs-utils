@@ -268,7 +268,7 @@ out_err:
 
 
 int
-serialize_krb5_ctx(gss_ctx_id_t ctx, gss_buffer_desc *buf, int32_t *endtime)
+serialize_krb5_ctx(gss_ctx_id_t *ctx, gss_buffer_desc *buf, int32_t *endtime)
 {
 	OM_uint32 maj_stat, min_stat;
 	void *return_ctx = 0;
@@ -277,7 +277,7 @@ serialize_krb5_ctx(gss_ctx_id_t ctx, gss_buffer_desc *buf, int32_t *endtime)
 	int retcode = 0;
 
 	printerr(2, "DEBUG: %s: lucid version!\n", __FUNCTION__);
-	maj_stat = export_lucid_sec_context(&min_stat, &ctx,
+	maj_stat = export_lucid_sec_context(&min_stat, ctx,
 					    1, &return_ctx);
 	if (maj_stat != GSS_S_COMPLETE) {
 		pgsserr("gss_export_lucid_sec_context",
@@ -313,7 +313,7 @@ serialize_krb5_ctx(gss_ctx_id_t ctx, gss_buffer_desc *buf, int32_t *endtime)
 	else
 		retcode = prepare_krb5_rfc4121_buffer(lctx, buf, endtime);
 
-	maj_stat = free_lucid_sec_context(&min_stat, ctx, return_ctx);
+	maj_stat = free_lucid_sec_context(&min_stat, *ctx, return_ctx);
 	if (maj_stat != GSS_S_COMPLETE) {
 		pgsserr("gss_free_lucid_sec_context",
 			maj_stat, min_stat, &krb5oid);

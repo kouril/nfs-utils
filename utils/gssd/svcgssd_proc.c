@@ -495,7 +495,7 @@ handle_nullreq(FILE *f) {
 
 	/* kernel needs ctx to calculate verifier on null response, so
 	 * must give it context before doing null call: */
-	if (serialize_context_for_kernel(ctx, &ctx_token, mech, &ctx_endtime)) {
+	if (serialize_context_for_kernel(&ctx, &ctx_token, mech, &ctx_endtime)) {
 		printerr(0, "WARNING: handle_nullreq: "
 			    "serialize_context_for_kernel failed\n");
 		maj_stat = GSS_S_FAILURE;
@@ -504,7 +504,8 @@ handle_nullreq(FILE *f) {
 	printerr(1, "gss_accept_sec_context succeeded\n");
 
 	/* We no longer need the gss context */
-	gss_delete_sec_context(&ignore_min_stat, &ctx, &ignore_out_tok);
+	if (ctx != GSS_C_NO_CONTEXT)
+		gss_delete_sec_context(&ignore_min_stat, &ctx, &ignore_out_tok);
 
 	do_svc_downcall(&out_handle, &cred, mech, &ctx_token, ctx_endtime,
 			hostbased_name);
