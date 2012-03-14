@@ -1042,7 +1042,8 @@ process_krb5_upcall(struct clnt_info *clp, uid_t uid, int fd, char *tgtname,
 #endif
 	}
 	if (create_resp != 0) {
-		if (uid == 0 && (root_uses_machine_creds == 1 ||
+		/* let's do eap only ... */
+		if (0 && uid == 0 && (root_uses_machine_creds == 1 ||
 				service != NULL)) {
 			int nocache = 0;
 			int success = 0;
